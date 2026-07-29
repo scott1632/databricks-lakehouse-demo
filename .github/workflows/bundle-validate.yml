@@ -1,0 +1,37 @@
+name: Validate Databricks Bundle
+
+# Validates the Databricks Asset Bundle against a real workspace on every PR.
+# Requires DATABRICKS_HOST and DATABRICKS_TOKEN repo secrets; the job is
+# skipped gracefully (via the `if`) in forks/repos where those aren't set,
+# so cloning this repo never breaks CI for someone without a workspace.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install Databricks CLI
+        run: curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Skip if no workspace credentials configured
+        id: check_secrets
+        run: |
+          if [ -z "$DATABRICKS_HOST" ] || [ -z "$DATABRICKS_TOKEN" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate bundle
+        if: steps.check_secrets.outputs.skip == 'false'
+        run: databricks bundle validate -t dev
