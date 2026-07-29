@@ -7,28 +7,29 @@ resources:
         timezone_id: "UTC"
         pause_status: PAUSED # unpause once you're ready for it to run on schedule
 
-      job_clusters:
-        - job_cluster_key: pipeline_cluster
-          new_cluster:
-            spark_version: "15.4.x-scala2.12"
-            node_type_id: "m5.large"
-            num_workers: 1
-            data_security_mode: SINGLE_USER
+      # Serverless compute: no job_clusters/new_cluster block. Each task runs
+      # on Databricks-managed serverless compute, and the wheel dependency
+      # is declared once here (rather than as a per-task cluster library,
+      # which requires a classic cluster that doesn't exist on serverless).
+      environments:
+        - environment_key: lakehouse_env
+          spec:
+            client: "1"
+            dependencies:
+              - ../dist/*.whl
 
       tasks:
         - task_key: bronze_ingest
-          job_cluster_key: pipeline_cluster
+          environment_key: lakehouse_env
           notebook_task:
             notebook_path: ../notebooks/01_bronze_ingest.py
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}
               event_count: "2000"
-          libraries:
-            - whl: ../dist/*.whl
 
         - task_key: silver_clean
-          job_cluster_key: pipeline_cluster
+          environment_key: lakehouse_env
           depends_on:
             - task_key: bronze_ingest
           notebook_task:
@@ -36,11 +37,9 @@ resources:
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}
-          libraries:
-            - whl: ../dist/*.whl
 
         - task_key: gold_aggregate
-          job_cluster_key: pipeline_cluster
+          environment_key: lakehouse_env
           depends_on:
             - task_key: silver_clean
           notebook_task:
@@ -48,5 +47,3 @@ resources:
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}
-          libraries:
-            - whl: ../dist/*.whl
