@@ -17,6 +17,7 @@ event_count = int(dbutils.widgets.get("event_count"))
 
 spark.sql(f"CREATE CATALOG IF NOT EXISTS {catalog}")
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog}.{schema}")
+spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.lakehouse")
 
 # COMMAND ----------
 
