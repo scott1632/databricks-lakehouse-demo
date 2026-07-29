@@ -11,14 +11,14 @@ def test_events_to_bronze_df_types_and_row_count(spark):
     assert dict(df.dtypes)["unit_price"] == "double"
 
 
-def test_write_bronze_appends_across_batches(spark, tmp_table_path):
+def test_write_bronze_appends_across_batches(spark, tmp_table_name):
     first_batch = events_to_bronze_df(spark, generate_orders(n=20, seed=1))
-    write_bronze(first_batch, tmp_table_path)
+    write_bronze(first_batch, tmp_table_name)
 
     second_batch = events_to_bronze_df(spark, generate_orders(n=20, seed=2))
-    write_bronze(second_batch, tmp_table_path)
+    write_bronze(second_batch, tmp_table_name)
 
-    result = spark.read.format("delta").load(tmp_table_path)
+    result = spark.table(tmp_table_name)
     assert result.count() == first_batch.count() + second_batch.count()
 
 

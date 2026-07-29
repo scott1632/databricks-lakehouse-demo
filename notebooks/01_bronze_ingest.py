@@ -55,7 +55,7 @@ display(bronze_df.limit(10))
 
 # COMMAND ----------
 
-bronze_table_path = f"/Volumes/{catalog}/{schema}/lakehouse/bronze_orders"
-write_bronze(bronze_df, bronze_table_path)
+bronze_table_name = f"{catalog}.{schema}.bronze_orders"
+write_bronze(bronze_df, bronze_table_name)
 
-print(f"Bronze table ready at {bronze_table_path}")
+print(f"Bronze table ready at {bronze_table_name}")

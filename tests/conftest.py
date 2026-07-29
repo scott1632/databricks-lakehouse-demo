@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+import uuid
 
 import pytest
 from delta import configure_spark_with_delta_pip
@@ -25,3 +26,10 @@ def tmp_table_path():
     path = tempfile.mkdtemp(prefix="delta_table_")
     yield path
     shutil.rmtree(path, ignore_errors=True)
+
+
+@pytest.fixture()
+def tmp_table_name(spark):
+    name = f"test_{uuid.uuid4().hex}"
+    yield name
+    spark.sql(f"DROP TABLE IF EXISTS {name}")

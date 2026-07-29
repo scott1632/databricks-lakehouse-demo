@@ -41,11 +41,11 @@ def events_to_bronze_df(spark: SparkSession, events: list[dict]) -> DataFrame:
     )
 
 
-def write_bronze(df: DataFrame, table_path: str) -> None:
-    """Append new events to the bronze Delta table."""
+def write_bronze(df: DataFrame, table_name: str) -> None:
+    """Append new events to the bronze managed Delta table."""
     (
         df.write.format("delta")
         .mode("append")
         .option("mergeSchema", "true")
-        .save(table_path)
+        .saveAsTable(table_name)
     )
