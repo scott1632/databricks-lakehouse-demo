@@ -1,0 +1,33 @@
+bundle:
+  name: lakehouse-demo
+
+include:
+  - resources/*.yml
+
+artifacts:
+  lakehouse_wheel:
+    type: whl
+    build: python -m pip install --upgrade build && python -m build
+    path: .
+
+variables:
+  catalog:
+    description: Unity Catalog catalog to write demo tables into
+    default: main
+  schema:
+    description: Schema (database) within the catalog for this demo's tables
+    default: lakehouse_demo
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://<your-workspace-host>.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://<your-workspace-host>.cloud.databricks.com
+    variables:
+      schema: lakehouse_demo_prod
