@@ -22,14 +22,28 @@ spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.lakehouse")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC The `lakehouse` package is installed as a wheel library on this job's
-# MAGIC cluster (see `databricks.yml`), so it imports like any other package —
-# MAGIC no path hacks needed.
+# MAGIC On the job cluster (see `databricks.yml`), the `lakehouse` package is
+# MAGIC installed as a wheel library, so it imports like any other package. For
+# MAGIC ad hoc runs against a notebook-only cluster where that install hasn't
+# MAGIC happened, fall back to adding this repo's `src/` to the path — derived
+# MAGIC from the notebook's own location, so it works regardless of which
+# MAGIC workspace folder the repo is checked out under.
 
 # COMMAND ----------
 
-from lakehouse.bronze import events_to_bronze_df, write_bronze
-from lakehouse.data_generator import generate_orders
+try:
+    from lakehouse.bronze import events_to_bronze_df, write_bronze
+    from lakehouse.data_generator import generate_orders
+except ModuleNotFoundError:
+    import os
+    import sys
+
+    notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
+    repo_root = os.path.dirname(os.path.dirname(notebook_path))
+    sys.path.insert(0, f"/Workspace{repo_root}/src")
+
+    from lakehouse.bronze import events_to_bronze_df, write_bronze
+    from lakehouse.data_generator import generate_orders
 
 # COMMAND ----------
 
