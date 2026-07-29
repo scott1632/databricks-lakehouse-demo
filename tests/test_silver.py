@@ -154,3 +154,44 @@ def test_upsert_silver_merges_on_later_event_time(spark, tmp_table_name):
     rows = result.collect()
     assert len(rows) == 1
     assert rows[0]["status"] == "delivered"
+
+
+def test_upsert_silver_tiebreaks_on_ingested_at_when_event_time_equal(spark, tmp_table_name):
+    initial_events = [
+        {
+            "order_id": "o1",
+            "customer_id": "c1",
+            "sku": "SKU-1",
+            "product_name": "Widget",
+            "category": "Cat",
+            "unit_price": 10.0,
+            "quantity": 1,
+            "status": "placed",
+            "event_time": "2026-01-01T00:00:00+00:00",
+            "ingested_at": "2026-01-01T00:00:00+00:00",
+        }
+    ]
+    silver_df = clean_bronze(events_to_bronze_df(spark, initial_events))
+    upsert_silver(spark, silver_df, tmp_table_name)
+
+    replay_events = [
+        {
+            "order_id": "o1",
+            "customer_id": "c1",
+            "sku": "SKU-1",
+            "product_name": "Widget",
+            "category": "Cat",
+            "unit_price": 10.0,
+            "quantity": 1,
+            "status": "delivered",
+            "event_time": "2026-01-01T00:00:00+00:00",  # same event_time as above
+            "ingested_at": "2026-01-01T00:05:00+00:00",  # later replay, should still win
+        }
+    ]
+    replay_silver_df = clean_bronze(events_to_bronze_df(spark, replay_events))
+    upsert_silver(spark, replay_silver_df, tmp_table_name)
+
+    result = spark.table(tmp_table_name)
+    rows = result.collect()
+    assert len(rows) == 1
+    assert rows[0]["status"] == "delivered"
