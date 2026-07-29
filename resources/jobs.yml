@@ -14,7 +14,7 @@ resources:
       environments:
         - environment_key: lakehouse_env
           spec:
-            client: "1"
+            client: "2"
             dependencies:
               - ../dist/*.whl
 
