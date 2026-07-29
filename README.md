@@ -78,7 +78,7 @@ every layer instead.
 │   └── 03_gold_aggregate.py
 ├── tests/                  # pytest suite using local PySpark + Delta (no cluster needed)
 ├── databricks.yml          # Asset Bundle definition (dev/prod targets)
-├── resources/jobs.yml      # Job + cluster + schedule definition
+├── resources/jobs.yml      # Job + serverless environment + schedule definition
 └── .github/workflows/      # CI: lint + test on every PR, bundle validate against a workspace
 ```
 
@@ -155,10 +155,16 @@ the notebook will silently execute old code.
   keep a real Databricks project's core logic CI-testable without a live
   cluster.
 - **Why a wheel library instead of `%pip install -e .` in notebooks?** The
-  Asset Bundle builds `src/lakehouse` into a wheel and attaches it as a job
-  cluster library (see `databricks.yml` / `resources/jobs.yml`), which is the
-  production-recommended pattern for shipping shared logic to multiple
-  notebooks/tasks reproducibly.
+  Asset Bundle builds `src/lakehouse` into a wheel and declares it as a
+  dependency of the job's serverless environment (see `databricks.yml` /
+  `resources/jobs.yml`), which is the production-recommended pattern for
+  shipping shared logic to multiple notebooks/tasks reproducibly.
+- **Why serverless compute instead of a classic job cluster?** The job
+  runs on Databricks-managed serverless compute (no `job_clusters`/
+  `new_cluster` block) rather than a classic cluster — some workspaces
+  (including Databricks Free Edition) only support serverless compute for
+  jobs, and serverless removes cluster sizing/startup-time concerns
+  entirely for a demo-scale pipeline like this one.
 - **Why is `unit_price` a `decimal(10,2)`, not a `double`?** Currency stored
   as a binary float accumulates rounding drift once you sum enough rows —
   `gold_customer_ltv.lifetime_value` visibly showed it (`6483.709999999999`
