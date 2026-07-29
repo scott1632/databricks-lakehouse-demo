@@ -50,7 +50,12 @@ def upsert_silver(spark: SparkSession, source_df: DataFrame, table_name: str) ->
     (
         target.alias("t")
         .merge(source_df.alias("s"), "t.order_id = s.order_id")
-        .whenMatchedUpdateAll(condition="s.event_time > t.event_time")
+        .whenMatchedUpdateAll(
+            condition=(
+                "s.event_time > t.event_time "
+                "OR (s.event_time = t.event_time AND s.ingested_at > t.ingested_at)"
+            )
+        )
         .whenNotMatchedInsertAll()
         .execute()
     )
