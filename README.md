@@ -98,24 +98,26 @@ pytest -v
 ## Deploying to a Databricks workspace
 
 1. [Install the Databricks CLI](https://docs.databricks.com/dev-tools/cli/install.html)
-   and authenticate: `databricks configure`.
-2. Edit `databricks.yml` and replace `<your-workspace-host>` with your
-   workspace URL.
-3. Validate and deploy the bundle:
+   and authenticate against your own workspace: `databricks auth login --host
+   https://<your-workspace-host>.cloud.databricks.com`. `databricks.yml`
+   deliberately doesn't hardcode a workspace host — the bundle uses whatever
+   host your active profile is authenticated against, so nothing needs
+   editing to point this at a different workspace.
+2. Validate and deploy the bundle:
 
    ```bash
    databricks bundle validate -t dev
    databricks bundle deploy -t dev
    ```
 
-4. Run the pipeline once on demand, or unpause the schedule in
+3. Run the pipeline once on demand, or unpause the schedule in
    `resources/jobs.yml` for it to run daily:
 
    ```bash
    databricks bundle run medallion_pipeline -t dev
    ```
 
-5. Check the results in your workspace's Catalog Explorer under
+4. Check the results in your workspace's Catalog Explorer under
    `main.lakehouse_demo` (or whatever `catalog`/`schema` you configured), or
    query the gold tables directly:
 

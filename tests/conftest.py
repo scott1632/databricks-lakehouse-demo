@@ -1,5 +1,3 @@
-import shutil
-import tempfile
 import uuid
 
 import pytest
@@ -19,13 +17,6 @@ def spark():
     session = configure_spark_with_delta_pip(builder).getOrCreate()
     yield session
     session.stop()
-
-
-@pytest.fixture()
-def tmp_table_path():
-    path = tempfile.mkdtemp(prefix="delta_table_")
-    yield path
-    shutil.rmtree(path, ignore_errors=True)
 
 
 @pytest.fixture()

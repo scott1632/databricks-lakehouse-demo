@@ -22,12 +22,8 @@ targets:
   dev:
     mode: development
     default: true
-    workspace:
-      host: https://<your-workspace-host>.cloud.databricks.com
 
   prod:
     mode: production
-    workspace:
-      host: https://<your-workspace-host>.cloud.databricks.com
     variables:
       schema: lakehouse_demo_prod
