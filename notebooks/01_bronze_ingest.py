@@ -58,12 +58,4 @@ display(bronze_df.limit(10))
 bronze_table_path = f"/Volumes/{catalog}/{schema}/lakehouse/bronze_orders"
 write_bronze(bronze_df, bronze_table_path)
 
-spark.sql(
-    f"""
-    CREATE TABLE IF NOT EXISTS {catalog}.{schema}.bronze_orders
-    USING DELTA
-    LOCATION '{bronze_table_path}'
-    """
-)
-
 print(f"Bronze table ready at {bronze_table_path}")
