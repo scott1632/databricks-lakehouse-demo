@@ -1,0 +1,52 @@
+resources:
+  jobs:
+    medallion_pipeline:
+      name: "[${bundle.target}] Medallion Pipeline (bronze -> silver -> gold)"
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"
+        timezone_id: "UTC"
+        pause_status: PAUSED # unpause once you're ready for it to run on schedule
+
+      job_clusters:
+        - job_cluster_key: pipeline_cluster
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 1
+            data_security_mode: SINGLE_USER
+
+      tasks:
+        - task_key: bronze_ingest
+          job_cluster_key: pipeline_cluster
+          notebook_task:
+            notebook_path: ../notebooks/01_bronze_ingest.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              event_count: "2000"
+          libraries:
+            - whl: ../dist/*.whl
+
+        - task_key: silver_clean
+          job_cluster_key: pipeline_cluster
+          depends_on:
+            - task_key: bronze_ingest
+          notebook_task:
+            notebook_path: ../notebooks/02_silver_clean.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          libraries:
+            - whl: ../dist/*.whl
+
+        - task_key: gold_aggregate
+          job_cluster_key: pipeline_cluster
+          depends_on:
+            - task_key: silver_clean
+          notebook_task:
+            notebook_path: ../notebooks/03_gold_aggregate.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+          libraries:
+            - whl: ../dist/*.whl
