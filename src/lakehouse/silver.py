@@ -20,12 +20,18 @@ def clean_bronze(df: DataFrame) -> DataFrame:
     """Apply data-quality filters and keep only the latest event per order."""
     quality_filtered = df.filter(
         (F.col("order_id").isNotNull())
+        & (F.col("customer_id").isNotNull())
         & (F.col("quantity") > 0)
         & (F.col("unit_price") > 0)
         & (F.col("status").isin(*VALID_STATUSES))
     )
 
-    window = Window.partitionBy("order_id").orderBy(F.col("event_time").desc())
+    # ingested_at as a tiebreaker makes dedup deterministic for replays that
+    # happen to share the same event_time, rather than resolving to whichever
+    # row the window function landed on arbitrarily.
+    window = Window.partitionBy("order_id").orderBy(
+        F.col("event_time").desc(), F.col("ingested_at").desc()
+    )
     return (
         quality_filtered.withColumn("_rn", F.row_number().over(window))
         .filter(F.col("_rn") == 1)

@@ -8,7 +8,7 @@ def test_events_to_bronze_df_types_and_row_count(spark):
 
     assert df.count() == len(events)
     assert dict(df.dtypes)["event_time"] == "timestamp"
-    assert dict(df.dtypes)["unit_price"] == "double"
+    assert dict(df.dtypes)["unit_price"] == "decimal(10,2)"
 
 
 def test_write_bronze_appends_across_batches(spark, tmp_table_name):
